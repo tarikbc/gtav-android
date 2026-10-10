@@ -194,6 +194,94 @@ static DWORD WINAPI watchdog(void *arg) {
     return 0;
 }
 
+// ---- pin: keep GTA5.exe off the little cores -----------------------------------------------------------------------
+// Android's scheduler sometimes parks the game's two heaviest threads on the slow cores (cpu0-2 on the Thor, 2.0 GHz
+// A510) for most of a session: pass 4 of the benchmark then runs at 24 FPS instead of 48, with the GPU 20 % busy.
+// GameNative pins the process it starts (this stub) to the fast cores, but the game is started by the Rockstar
+// launcher and comes up with every core allowed. This thread sets the game's affinity, process and threads, to
+// GTA_PIN_MASK (hex, default f8 = cpu3 to cpu7 on an 8-core SoC; 0 turns it off) as soon as the process exists.
+
+static DWORD_PTR pin_mask = 0xf8;
+
+static int pin_process(DWORD pid) {
+    HANDLE h = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_SET_INFORMATION, FALSE, pid);
+    if (!h) return -1;
+    DWORD_PTR cur = 0, sys = 0;
+    GetProcessAffinityMask(h, &cur, &sys);
+    DWORD_PTR want = pin_mask & sys;
+    int n = 0;
+    if (want && cur != want) {
+        SetProcessAffinityMask(h, want);
+        HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+        THREADENTRY32 te = {sizeof(te)};
+        for (BOOL ok = Thread32First(snap, &te); ok; ok = Thread32Next(snap, &te)) {
+            if (te.th32OwnerProcessID != pid) continue;
+            HANDLE t = OpenThread(THREAD_SET_INFORMATION | THREAD_QUERY_INFORMATION, FALSE, te.th32ThreadID);
+            if (t && SetThreadAffinityMask(t, want)) n++;
+            if (t) CloseHandle(t);
+        }
+        CloseHandle(snap);
+        logline(L"pin: GTA5.exe pid %lu affinity %llx -> %llx (%d threads)", pid, (unsigned long long)cur,
+                (unsigned long long)want, n);
+    }
+    CloseHandle(h);
+    return n;
+}
+
+// While the game runs, the Rockstar launcher tree keeps working: Social Club's renderer helper (the overlay's web
+// page) took 59 % of a core in a benchmark, its GPU helper 24 %, the launcher 12 %. They are not pinned, so they
+// take big-core time from the game. Once GTA5.exe exists, this moves them to GTA_SC_MASK (hex, default 07 = the
+// little cores) at below-normal priority. Ending them is not an option: Social Club then ends the session.
+
+static DWORD_PTR sc_mask = 0x07;
+static const wchar_t *sc_names[] = {L"SocialClubHelper.exe", L"Launcher.exe", L"RockstarService.exe", L"RockstarErrorHandler.exe", NULL};
+
+static void park_process(DWORD pid, const wchar_t *name) {
+    HANDLE h = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_SET_INFORMATION, FALSE, pid);
+    if (!h) return;
+    DWORD_PTR cur = 0, sys = 0;
+    GetProcessAffinityMask(h, &cur, &sys);
+    DWORD_PTR want = sc_mask & sys;
+    if (want && cur != want) {
+        SetProcessAffinityMask(h, want);
+        SetPriorityClass(h, BELOW_NORMAL_PRIORITY_CLASS);
+        int n = 0;
+        HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+        THREADENTRY32 te = {sizeof(te)};
+        for (BOOL ok = Thread32First(snap, &te); ok; ok = Thread32Next(snap, &te)) {
+            if (te.th32OwnerProcessID != pid) continue;
+            HANDLE t = OpenThread(THREAD_SET_INFORMATION | THREAD_QUERY_INFORMATION, FALSE, te.th32ThreadID);
+            if (t && SetThreadAffinityMask(t, want)) n++;
+            if (t) CloseHandle(t);
+        }
+        CloseHandle(snap);
+        logline(L"pin: %ls pid %lu parked on cores %llx, below normal priority (%d threads)", name, pid,
+                (unsigned long long)want, n);
+    }
+    CloseHandle(h);
+}
+
+static DWORD WINAPI pinner(void *arg) {
+    for (;;) {
+        Sleep(2000);
+        HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        PROCESSENTRY32W pe = {sizeof(pe)};
+        int game = 0;
+        for (BOOL ok = Process32FirstW(snap, &pe); ok; ok = Process32NextW(snap, &pe))
+            if (!_wcsicmp(pe.szExeFile, L"GTA5.exe")) {
+                game = 1;
+                pin_process(pe.th32ProcessID);
+            }
+        if (game && sc_mask) {
+            for (BOOL ok = Process32FirstW(snap, &pe); ok; ok = Process32NextW(snap, &pe))
+                for (int i = 0; sc_names[i]; i++)
+                    if (!_wcsicmp(pe.szExeFile, sc_names[i])) park_process(pe.th32ProcessID, sc_names[i]);
+        }
+        CloseHandle(snap);
+    }
+    return 0;
+}
+
 // ---- 1. start the game ---------------------------------------------------------------------------------------------
 
 static const wchar_t *skip_token(const wchar_t *p) {
@@ -247,6 +335,13 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmdline, int show) {
     wchar_t xw[8];
     if (!(GetEnvironmentVariableW(L"XWATCH", xw, 8) && xw[0] == L'0')) CreateThread(NULL, 0, watchdog, NULL, 0, NULL);
     else logline(L"xwatch: off (XWATCH=0)");
+    wchar_t pm[32];
+    if (GetEnvironmentVariableW(L"GTA_PIN_MASK", pm, 32)) pin_mask = (DWORD_PTR)wcstoull(pm, NULL, 16);
+    if (GetEnvironmentVariableW(L"GTA_SC_MASK", pm, 32)) sc_mask = (DWORD_PTR)wcstoull(pm, NULL, 16);
+    if (pin_mask) {
+        CreateThread(NULL, 0, pinner, NULL, 0, NULL);
+        logline(L"pin: GTA5.exe will be kept on cores %llx", (unsigned long long)pin_mask);
+    } else logline(L"pin: off (GTA_PIN_MASK=0)");
 
     _snwprintf(cmd, 32768, L"\"%ls\" %ls%ls%ls", target, tail, extra[0] ? L" " : L"", extra);
     STARTUPINFOW si = {sizeof(si)};

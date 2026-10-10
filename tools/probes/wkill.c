@@ -75,7 +75,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmdline, int show) {
         for (int i = 1; i < argc; i++) {
             if (_wcsicmp(argv[i], pe.szExeFile) == 0) hit = 1;
             if (argv[i][0] == L'#' && (DWORD)_wtoi(argv[i] + 1) == pe.th32ProcessID) hit = 1;
-            if (argv[i][0] == L'@' && _wcsicmp(argv[i] + 1, type) == 0) hit = 1;  // @gpu-process etc.
+            if (argv[i][0] == L'@' && _wcsnicmp(argv[i] + 1, type, wcslen(argv[i] + 1)) == 0) hit = 1;  // @gpu-process, @utility:audio (prefix)
         }
         if (log) fwprintf(log, L"%5lu %5lu %ls [%ls]%ls", pe.th32ProcessID, pe.th32ParentProcessID, pe.szExeFile,
                           type, hit ? L"  -> " : L"\n");
