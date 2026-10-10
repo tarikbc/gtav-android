@@ -46,6 +46,15 @@ video helpers ended). "Bad mode" = the game's heaviest threads sat on the slow c
 | 10 | GPU held at its top clock (power profile) | 50.9 / 70.5 / 59.8 / 62.7 / 48.6 | 47.0 | 19.2 ms | 96 |
 | 11 | same, no pin (bad mode, perturbed) | 45.0 / 64.4 / 31.7 / 27.1 / 24.2 | 24.6 | 41 ms | 1070 |
 | 12 | GPU top clock, pinned by the launcher stub (perturbed) | 44.3 / 48.3 / 50.5 / 66.7 / 57.3 | 51.0 | 17.6 ms | 62 |
+| 13 | GPU top clock, stub pin, clean (Cocoon restarted under memory pressure during the run) | 49.0 / 53.0 / 33.5 / 33.5 / 50.9 | 41.0 | 20.1 ms | 331 |
+| 14 | same, Rockstar tree parked on the little cores | 32.6 / 42.1 / 37.8 / 35.6 / 56.4 | 46.2 | 19.6 ms | 126 |
+| 15 | same, `callers` probe attached (perturbed) | 43.0 / 48.9 / 37.1 / 35.5 / 47.1 | 40.3 | 22.4 ms | 17 |
+| 16 | esync forced off (`WINEESYNC=0`, `PROTON_NO_ESYNC=1`), diagnostic | 6.7 / 8.4 / 7.7 / 6.6 / 5.7 | 5.7 | 164.5 ms | 2343 |
+| 17 | final clean: esync on, pin, parking, GPU clock, `FEX_TSOENABLED=0` | 56.7 / 42.4 / 39.8 / 39.1 / 57.1 | 48.9 | 18.6 ms | 102 |
+| 18 | same with TSO at its default | 40.9 / 39.7 / 39.1 / 45.5 / 52.5 | 40.4 | 19.2 ms | 401 |
+
+Runs 10 to 17 ran with `FEX_TSOENABLED=0` left in the container from run 9 (noticed after run 17); run 18 is the
+same configuration with TSO on.
 
 ## Rules used for the numbers in the README
 

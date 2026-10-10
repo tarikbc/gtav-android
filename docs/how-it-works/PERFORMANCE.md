@@ -28,6 +28,9 @@ folder once more after the process is gone, or it misses the file (one run was l
 | GPU held at its top clock (power profile below) | 19.2 ms | 48.6 | 47.0 | 96 |
 | GPU top clock and the stub's core pin (three runs; the 57.3 one with the profiler attached) | 19.2 / 17.6 / 20.1 ms | 48.6 / 57.3 / 50.9 | 47.0 / 51.0 / 41.0 | 96 / 62 / 331 |
 | GPU top clock, core pin and the Rockstar tree parked on the little cores | 19.6 ms | 56.4 | 46.2 | 126 |
+| Same, final clean run (esync on, TSO off) | 18.6 ms | 57.1 | 48.9 | 102 |
+| Same with TSO on (FEX default) | 19.2 ms | 52.5 | 40.4 | 401 |
+| esync forced off (`WINEESYNC=0`, `PROTON_NO_ESYNC=1`), diagnostic | 164.5 ms | 5.7 | 5.7 | 2343 |
 | GPU top clock + GTA5.exe pinned to the fast cores by the launcher stub (measured with the sampling profiler running; a clean rerun is pending) | **17.6 ms** | **57.3** | **51.0** | 62 |
 | ARM64EC DXVK 2.4.1-1 (native) instead of GameNative's x86-64 build | 25.5 / 25.3 ms | 41.0 / 40.5 | 34.1 / 36.8 | 275 / 185 |
 | GTA5.exe pinned to the fast cores (cpu3 to cpu7) by hand, GPU governor default | 23.0 ms | 43.5 | 37.4 | 193 |
@@ -66,9 +69,13 @@ core against 39 %), but it was never the limiter.
 
 ### What did not matter
 
-- **TSO off.** `FEX_TSOENABLED=0` makes FEX drop x86 memory ordering. The first two passes were the fastest seen
-  (43.6 / 62.5 FPS), then GTA5.exe crashed in pass 2. The other TSO-off run completed but in the bad mode. The game
-  needs x86 ordering; TSO stays on.
+- **TSO off, first look.** `FEX_TSOENABLED=0` makes FEX drop x86 memory ordering. The first run with it came out in
+  the bad mode (the little cores, see below); the second had the fastest first passes seen (43.6 / 62.5 FPS) and
+  then GTA5.exe ended in pass 2. Correction, found late: that run's variable stayed in the container, so every run
+  after 17:52 (GPU clock, pin, parking, the profiles) ran with TSO off, and all of them completed. The split, one
+  run each in the final configuration: TSO off 57.1 FPS in pass 4 with 102 frames over 50 ms, TSO on 52.5 FPS with
+  401. So TSO off is worth about 9 % and far fewer long frames here, against that one crash in about ten runs. The
+  README keeps TSO on as the default and lists `FEX_TSOENABLED=0` as the optional step.
 - **Big-core pin.** The scheduler already keeps the main thread on cpu3 to cpu7 for about 90 % of the samples
   (`corewatch`). A pin gained 3 %, inside the noise.
 - **FEX exceptions.** The FEX counters of the `aoe4-perf6` build read zero fast traps and zero continues per second
@@ -150,9 +157,22 @@ So the main thread spends about 38 % of its samples signalling or waiting on eve
 thread waits 32 % of its samples, and one worker sits in `Sleep` with 6 s of kernel time per minute: a polling
 loop that burns 42 % of a fast core. On Wine, events and semaphores are either a wineserver round trip each (slow)
 or, with esync or fsync, a cheap eventfd or futex call. The Thor's kernel is 5.15, so fsync (`futex_waitv`, 5.16)
-is out; esync (`WINEESYNC=1` in the container) is the only cheap path, and whether it is active here is not yet
-verified. The next step is `gcallers.py`: for each of those calls, the handle and the game's return addresses, to
-see which objects the threads wait on and who the sleeper is.
+is out; esync (`WINEESYNC=1` in the container, GameNative's default) is the only cheap path.
+
+**esync is active, and it is worth ten times the frame rate.** A diagnostic run with `WINEESYNC=0` and
+`PROTON_NO_ESYNC=1` fell to 5.7 FPS overall (164 ms median), with GTA5.exe at 124 % of a core and `wineserver` at
+79 %: every event and semaphore call became a server round trip. With esync on, `wineserver` still takes 32 to 38 %
+of a core (handles, timers, the launcher tree); that is the floor without fsync. Keep `WINEESYNC=1`.
+
+`gcallers.py` (the agent's `callers` command: samples inside one syscall stub, with the game's return addresses on
+the stack) named the main thread's wait sites: `GTA5.exe+1eb41c0`, `+1f6a820`, `+1eb4101` and `+2f5db80` for
+`NtWaitForSingleObject`, `+134d31d`, `+134553e`, `+946517` and `+1525844` for `NtReleaseSemaphore`, `+258e2b8` for
+`Sleep`. The sampled RCX is not the handle (the registers change inside the dispatcher before the sample), so which
+objects they are stays open; without symbols these addresses are the end of this path.
+
+A side effect of the agent's file protocol: its request and response files live on `/sdcard`, and Android's media
+scanner (`com.android.providers.media.module`) reacts to every write, up to 91 % of a core in a profiled run. Clean
+runs do not use the agent.
 
 ## Tools
 

@@ -8,6 +8,8 @@
   at below-normal priority (`GTA_SC_MASK`, default `07`).
 - Power profile with the GPU held at its top clock (`tools/scripts/power-profile-gpu-max.json`): +22 % overall in
   the built-in benchmark. With the pin, pass 4 went from 42.1 to 57.3 FPS.
+- Findings: esync is worth ten times the frame rate (5.7 FPS without it); `FEX_TSOENABLED=0` gives about 9 % and
+  fewer long frames, with one crash in about ten runs (optional); a native ARM64EC DXVK is 4 % slower.
 - `wbench.exe` copies the benchmark results out of the session; `wkill.exe` matches CEF process types by prefix.
 - `tools/scripts/`: the measurement scripts (experiment runner, dashboard, thread placement, clocks, sampling
   profiler and FEX counters through the ageofempires-android agent).
