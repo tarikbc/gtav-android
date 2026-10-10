@@ -29,3 +29,8 @@ Set `ANDROID_SERIAL` when more than one device is connected.
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-10 | Prologue, player still, 65 s | Defaults: 800x600 window, VSync Half | 31.3 | 33.4 ms | 33.4 ms | 50.1 ms | 19 | 0 |
 | 2026-10-10 | Prologue, player still, 64 s | 1280x720 borderless, VSync Off, display 120 Hz | 59.5 | 16.8 ms | 42.1 ms | 134.8 ms | 20 | 3 |
+| 2026-10-10 | Prologue, player still, 64 s | Same, with the patched Turnip `turnip-main-c78a9e9-ubwc` from ageofempires-android | 57.9 | 16.9 ms | 42.1 ms | 210.6 ms | 19 | 2 |
+
+The patched Turnip driver that gave Age of Empires IV +27 % made no difference here (57.9 against 59.5 FPS, within
+the spread of one run), so the README keeps GameNative's `turnip_v26.0.0_R6`. At about 58 to 60 FPS the CPU was 74 to
+84 % busy and the GPU about 70 %, at 88 °C: the next work is on the CPU side (FEX) and on heat.
