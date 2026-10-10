@@ -43,13 +43,20 @@ ownership as valid and started `GTA5.exe`. Rockstar asked for an email code once
 - About 20 s into story mode the X server froze again: Social Club's CEF GPU helper had stopped reading its X
   connection, and GameNative's X server blocks on such a client while holding its global lock
   ([X-SERVER-FREEZE.md](how-it-works/X-SERVER-FREEZE.md)). Ending only that helper unfroze it every time, so the
-  launcher stand-in now watches the X server and does that by itself, and a fourth `libcef.dll` patch keeps Chromium
-  restarting the helper.
+  launcher stand-in now watches the X server and does that by itself. A fourth `libcef.dll` patch that turned off
+  Chromium's GPU crash limit made the helper's start-up crashes last so long that half the starts failed; it was
+  dropped.
 
 ## 6. Story mode
 
 With all of that, the prologue loaded and played with the player in control: 31.3 FPS, held at 30, no frame over
 100 ms in a 65 s window ([TESTING.md](guides/TESTING.md)).
+
+## 7. Twice as fast
+
+The 30 FPS cap was the game's own choice: `VSync` 2 (Half) in `settings.xml`. With VSync off and the game at
+1280x720 in a borderless window (exclusive fullscreen minimized itself whenever Android took the focus), the same
+scene ran at 59.5 FPS.
 
 ## Side lessons
 

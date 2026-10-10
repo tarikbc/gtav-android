@@ -19,6 +19,16 @@ Output: `wkill.txt` next to `wkill.exe`. It reads command lines from each proces
 launcher's own command line holds the Epic login code. `wkill.exe wins` also lists windows, but it hangs while the X
 server is stuck (loading `winex11.drv` opens a new X connection).
 
+## wfocus
+
+```
+wfocus.exe [window class]      default grcWindow (GTA V)
+```
+
+Writes which window has the focus to `wfocus.txt` next to itself, restores the target window if it is minimized and
+makes it the foreground window. GTA V stops drawing while it does not have the focus, and on Android nothing can
+alt-tab back to it.
+
 ## sdg (stack dump)
 
 ```

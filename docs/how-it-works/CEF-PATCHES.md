@@ -1,11 +1,11 @@
-# Social Club's libcef.dll: four patches
+# Social Club's libcef.dll: three patches
 
 The Rockstar launcher's UI, including the sign-in page, is Chromium (CEF 143, Chromium 143.0.7499.193) running in
 `SocialClubHelper.exe` processes from `C:\Program Files\Rockstar Games\Social Club`. Under FEX on GameNative's
-ARM64EC Wine, the stock `libcef.dll` never shows a usable sign-in page. Four small changes fix that.
+ARM64EC Wine, the stock `libcef.dll` never shows a usable sign-in page. Three small changes fix that.
 `EpicGamesLauncher.exe` applies them at each start if the file is the known original (Social Club 2.4.0.240,
-249,338,488 bytes, SHA-1 `2320e1e0b0e2d1cee8f89e80a6dcf9cb3d1a6ffd`); the result has SHA-1
-`1be6f14b78ce9efa3d29f82ef2172eb14fc11ebd`. A copy of the original stays as `libcef.dll.orig`.
+249,338,488 bytes, SHA-1 `2320e1e0b0e2d1cee8f89e80a6dcf9cb3d1a6ffd`). A copy of the original stays as
+`libcef.dll.orig`.
 
 `socialclub.dll` is signature-checked (any changed byte and `PlayGTAV.exe` refuses to start the game), so the
 fixes go into `libcef.dll`, which is not. Rockstar passes its Chromium switches inside `socialclub.dll`, so a switch
@@ -16,7 +16,6 @@ cannot simply be added; the patches rename strings and pointers instead.
 | `0xb4a3bc` | `28` | `20` | V8's address-space constant (40 bits to 32 bits) |
 | `0xd790f12` | `tmmon64.dll` | `ntdll.dll` | Stack sampling profiler off |
 | `0xe471a08` | `6b a3 8e` | `c4 02 02` | WebGPU off |
-| `0xd1dd390` | `disable-gpu-process-crash-limit` | `disable-pinch` | GPU helper restarts never give up |
 
 ## 1. V8 and the address space
 
@@ -39,15 +38,14 @@ violation), so the window stayed hidden. Rockstar already passes `--disable-feat
 The patch points the `kWebGPUService` feature's name (a pointer in `.data`) at the string
 `SpareRendererForSitePerProcess`, so that switch now turns WebGPU off too.
 
-## 4. The GPU crash limit
-
-Chromium stops restarting its GPU helper after a few crashes and then exits ("GPU process isn't usable"). The X
-server watchdog ([X-SERVER-FREEZE.md](X-SERVER-FREEZE.md)) ends that helper on purpose, and the helper also crashes a
-few times while the launcher starts. The patch renames the switch `disable-gpu-process-crash-limit` to
-`disable-pinch`, a switch Rockstar always passes, so the limit is off.
-
 ## Tried and dropped
 
+- Turning off Chromium's GPU crash limit (renaming the switch `disable-gpu-process-crash-limit` to `disable-pinch`, a
+  switch Rockstar always passes). Social Club's GPU helper crashes a few times while the launcher starts; without the
+  limit that went on much longer (18 to 36 crash lines instead of 3), and 2 of 4 starts failed the launcher's check
+  ("Launch validation had fatal error!"). The limit is not needed for the X server watchdog: Chromium restarted the
+  GPU helper after each of three kills in a row. `EpicGamesLauncher.exe` undoes this rename where an earlier build
+  applied it.
 - `--in-process-gpu` (the same rename trick on `in-process-gpu`): the Social Club browser died at start
   ("Browser terminated and could not recover", `SC_INIT_ERR_WEBSITE_FAILED_LOAD`).
 - DXVK's `dxgi.dll`/`d3d11.dll` for `SocialClubHelper.exe` (Proton sets them to Wine's builtin wined3d for it): the

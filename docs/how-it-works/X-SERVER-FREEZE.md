@@ -47,8 +47,7 @@ does not stop the others.
 - A probe thread calls `GetCursorPos`, which Wine turns into `XQueryPointer`, an X round trip. It then pumps its own
   messages for a second, so it never becomes a blocked client itself.
 - If no probe has returned for about 3 s, the watchdog ends every `SocialClubHelper.exe` whose command line has
-  `--type=gpu-process`. Chromium starts a new GPU helper; the [crash-limit patch](CEF-PATCHES.md) keeps it from
-  giving up after a few.
+  `--type=gpu-process`. Chromium starts a new GPU helper (it did after each of three kills in a row).
 - It logs each stall to `%TEMP%\EpicGamesLauncher.log`.
 
 Do not end the whole `SocialClubHelper.exe` tree: the new browser signs in again and Rockstar signs the first session

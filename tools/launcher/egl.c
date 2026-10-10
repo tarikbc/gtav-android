@@ -8,8 +8,8 @@
 //    Extra arguments: EPIC_EXTRA_ARGS (container env var), default -nobattleye (without it the launcher starts
 //    GTA5_BE.exe and the game ends when story mode loads).
 //
-// 2. Social Club libcef.dll. Rockstar's CEF build needs four byte changes under FEX on ARM64EC Wine (see
-//    docs/how-it-works/CEF-PATCHES.md). They are applied to the installed file only when all four sites hold the
+// 2. Social Club libcef.dll. Rockstar's CEF build needs three byte changes under FEX on ARM64EC Wine (see
+//    docs/how-it-works/CEF-PATCHES.md). They are applied to the installed file only when all three sites hold the
 //    known original bytes (Social Club 2.4.0.240); a copy is kept as libcef.dll.orig. Any other version is left alone.
 //
 // 3. X server watchdog. GameNative's X server writes events with blocking writes under a global lock; when Social
@@ -54,12 +54,15 @@ static void logline(const wchar_t *fmt, ...) {
 struct site { LONGLONG off; int len; const char *old, *new_; const wchar_t *what; };
 static const struct site sites[] = {
     {0xb4a3bc, 1, "\x28", "\x20", L"V8 address space 40 -> 32 bits (the Thor's kernel has 39-bit user addresses)"},
-    {0xd1dd390, 31, "disable-gpu-process-crash-limit", "disable-pinch\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
-     L"switch disable-gpu-process-crash-limit -> disable-pinch (always passed): GPU helper restarts never give up"},
     {0xd790f12, 11, "tmmon64.dll", "ntdll.dll\0\0", L"stack sampling profiler off (deadlocks the IO thread under FEX)"},
     {0xe471a08, 3, "\x6b\xa3\x8e", "\xc4\x02\x02", L"WebGPU feature name -> SpareRendererForSitePerProcess (disabled)"},
 };
 #define NSITES (sizeof(sites) / sizeof(sites[0]))
+
+// v0.1.0 also renamed the switch disable-gpu-process-crash-limit; with it, the GPU helper's crash loop at launcher
+// start lasted longer and the launch check failed ("Launch validation had fatal error!"). Undo it where present.
+static const struct site undo = {0xd1dd390, 31, "disable-pinch\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
+                                 "disable-gpu-process-crash-limit", L"undo the v0.1.0 crash-limit rename"};
 
 static void patch_libcef(void) {
     HANDLE f = CreateFileW(LIBCEF, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
@@ -79,12 +82,19 @@ static void patch_libcef(void) {
         if (got == (DWORD)sites[i].len && !memcmp(buf, sites[i].old, sites[i].len)) olds++;
         if (got == (DWORD)sites[i].len && !memcmp(buf, sites[i].new_, sites[i].len)) news++;
     }
+    char ubuf[64];
+    DWORD ugot = 0;
+    LARGE_INTEGER uat = {.QuadPart = undo.off};
+    SetFilePointerEx(f, uat, NULL, FILE_BEGIN);
+    ReadFile(f, ubuf, undo.len, &ugot, NULL);
+    int undo_needed = ugot == (DWORD)undo.len && !memcmp(ubuf, undo.old, undo.len);
+    int undo_clean = ugot == (DWORD)undo.len && !memcmp(ubuf, undo.new_, undo.len);
     CloseHandle(f);
-    if (size.QuadPart != LIBCEF_SIZE || olds + news != (int)NSITES) {
+    if (size.QuadPart != LIBCEF_SIZE || olds + news != (int)NSITES || !(undo_needed || undo_clean)) {
         logline(L"libcef: unknown version (size %lld), left alone; the sign-in page may hang", size.QuadPart);
         return;
     }
-    if (news == (int)NSITES) {
+    if (news == (int)NSITES && !undo_needed) {
         logline(L"libcef: already patched");
         return;
     }
@@ -95,12 +105,14 @@ static void patch_libcef(void) {
         logline(L"libcef: cannot open for writing (error %lu): is the Rockstar launcher running?", GetLastError());
         return;
     }
-    for (size_t i = 0; i < NSITES; i++) {
+    for (size_t i = 0; i < NSITES + 1; i++) {
+        const struct site *t = i < NSITES ? &sites[i] : &undo;
+        if (t == &undo && !undo_needed) break;
         DWORD put = 0;
-        LARGE_INTEGER at = {.QuadPart = sites[i].off};
+        LARGE_INTEGER at = {.QuadPart = t->off};
         SetFilePointerEx(f, at, NULL, FILE_BEGIN);
-        WriteFile(f, sites[i].new_, sites[i].len, &put, NULL);
-        logline(L"libcef: %ls: %ls", sites[i].what, put == (DWORD)sites[i].len ? L"done" : L"FAILED");
+        WriteFile(f, t->new_, t->len, &put, NULL);
+        logline(L"libcef: %ls: %ls", t->what, put == (DWORD)t->len ? L"done" : L"FAILED");
     }
     CloseHandle(f);
 }

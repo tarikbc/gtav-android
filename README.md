@@ -8,7 +8,7 @@ from this repo, `EpicGamesLauncher.exe`, plus a few container settings fix that.
 | | GTA V Legacy (Epic) |
 |---|---|
 | Plays | Story mode: the prologue mission, with the player in control |
-| Speed | **31 FPS** (held at 30), median frame 33.4 ms, no frame over 100 ms in a 65 s window, default 800x600 window |
+| Speed | **59.5 FPS** at 1280x720 full screen (borderless, VSync off), median frame 16.8 ms; the game's default (VSync Half) holds it at 30 |
 | Controls | The Thor's controller; the touch screen works as a touchpad |
 | Online | No. GTA Online needs BattlEye, which does not run here |
 
@@ -24,7 +24,7 @@ from this repo, `EpicGamesLauncher.exe`, plus a few container settings fix that.
 |---|---|
 | Tested device | AYN Thor (Snapdragon 8 Gen 2, Adreno 740, 16 GB RAM, Android 13), GameNative 1.3.0 |
 | Tested game | GTA V Legacy 1.0.3889.0 from the Epic Games Store (Premium Edition), Rockstar Games Launcher 1.0.109.3031, Social Club 2.4.0.240 |
-| Works | Rockstar sign-in, the main menu, story mode (the prologue) |
+| Works | Rockstar sign-in, the main menu, story mode (the prologue); 3 of 3 starts in a row with v0.1.0 |
 | Not tested | Long sessions, missions after the prologue, other devices, the Steam version, GTA V Enhanced |
 | Known issues | [Known issues](#known-issues) below |
 
@@ -68,7 +68,7 @@ What `EpicGamesLauncher.exe` does at each start ([EPIC-LAUNCH.md](docs/how-it-wo
 1. It starts the game as the Epic Games Launcher would, so the Rockstar launcher accepts the Epic launch.
 2. It adds `-nobattleye`, without which the game ends when story mode loads. A container variable
    `EPIC_EXTRA_ARGS` replaces that default.
-3. It patches Social Club's `libcef.dll` once (4 bytes and 2 strings, a backup stays as `libcef.dll.orig`), so the
+3. It patches Social Club's `libcef.dll` once (4 bytes and a string, a backup stays as `libcef.dll.orig`), so the
    Rockstar sign-in page loads ([CEF-PATCHES.md](docs/how-it-works/CEF-PATCHES.md)). It patches only the known version
    and leaves any other alone.
 4. It watches GameNative's X server and unfreezes it when Social Club stops reading
@@ -83,27 +83,32 @@ Its log is `C:\users\xuser\AppData\Local\Temp\EpicGamesLauncher.log`. It never w
 2. The Rockstar sign-in window opens. Sign in with your Rockstar account and tick **Auto Sign In**, so later starts
    skip this window. Rockstar may send a code to your email.
 3. The game starts after about a minute. On the first start it shows **Display Calibration**; press Enter (or A).
-4. In the main menu, choose **STORY MODE**.
+4. In the main menu open **SETTINGS → Graphics** and set **Screen Type: Windowed Borderless**, **Resolution:
+   1280x720**, **VSync: Off**. The game picks VSync Half (30 FPS) on its own, and in exclusive fullscreen it
+   minimizes itself whenever Android takes the focus. The same values in
+   `Documents\Rockstar Games\GTA V\settings.xml`: `Windowed` 2, `ScreenWidth` 1280, `ScreenHeight` 720, `VSync` 0.
+5. Back in the main menu, choose **STORY MODE**.
 
 ## What to expect
 
-One 65 s window in the prologue, player standing still, default settings (800x600 window), frame times from
-Android's compositor ([TESTING.md](docs/guides/TESTING.md)):
+One 60 s window each in the prologue, player standing still, frame times from Android's compositor
+([TESTING.md](docs/guides/TESTING.md)):
 
-| FPS | mean frame | median | p99 | worst | frames over 50 ms | over 100 ms |
-|---|---|---|---|---|---|---|
-| 31.3 | 32.0 ms | 33.4 ms | 33.4 ms | 50.1 ms | 19 | 0 |
+| Game settings | FPS | mean frame | median | p99 | worst | over 50 ms | over 100 ms |
+|---|---|---|---|---|---|---|---|
+| Defaults: 800x600 window, VSync Half | 31.3 | 32.0 ms | 33.4 ms | 33.4 ms | 50.1 ms | 19 | 0 |
+| 1280x720 borderless, VSync Off | **59.5** | 16.8 ms | 16.8 ms | 42.1 ms | 134.8 ms | 20 | 3 |
 
-The game is held at 30 FPS with GPU (about 65 %) and CPU (about 25 %) to spare. Removing that cap and raising the
-resolution is the next step.
+At 59.5 FPS the GPU is about 75 % busy and the CPU about 71 %, at 86 to 88 °C with the fan on Custom.
 
 ## Known issues
 
-- **White launcher window, "Launch validation had fatal error!"** (1 of 2 starts in testing). Social Club's GPU helper
-  crashes several times while the launcher starts; if that overlaps the launch check, the launcher shows an empty
-  window and the game does not start. Close the game in GameNative and tap Play again.
-- **Pulling down Android's quick settings pauses the game.** GameNative shows its Play button; tap it, then tap the
-  game window once so GTA V gets the focus back.
+- **GTA V stops drawing when it loses the focus** (Android's quick settings, a console window in Wine) and shows its
+  pause menu when it gets it back; press Start (or Esc). Quick settings also pause GameNative itself: tap its Play
+  button. `wfocus.exe` ([TOOLS.md](docs/guides/TOOLS.md)) gives the focus back from adb.
+- **White launcher window, "Launch validation had fatal error!"** Social Club's GPU helper crashes a few times while
+  the launcher starts. With v0.1.0 that is short (3 of 3 starts worked); if the game does not start, close it in
+  GameNative and tap Play again.
 - **The screen freezes and Android says "GameNative isn't responding".** That is the X server freeze. The launcher
   watches for it; if it still happens, check the log above for `xwatch` lines and tell us in an issue.
 - **GTA Online** does not work (BattlEye).

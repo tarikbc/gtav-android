@@ -17,6 +17,8 @@ Set `ANDROID_SERIAL` when more than one device is connected.
 
 - One window per setting, a few runs at most; stop when the trend is clear.
 - The Thor's fan on **Custom** (88 %) only while measuring, back to **Smart** right after.
+- Do not start console programs in Wine while measuring (a `cmd` batch from adb, for example): the console window
+  takes the focus and GTA V stops drawing.
 - Check that frames flow before recording. Opening Android's quick settings (for example to change the fan) pauses
   GameNative: tap its Play button, then tap the game window so GTA V has the focus again. GameNative's log line
   `PowerMetrics: fps=...` (every 5 s) shows whether the game draws.
@@ -25,4 +27,5 @@ Set `ANDROID_SERIAL` when more than one device is connected.
 
 | Date | Scene | Settings | FPS | median | p99 | worst | >50 ms | >100 ms |
 |---|---|---|---|---|---|---|---|---|
-| 2026-10-10 | Prologue, player still, 65 s | Defaults, 800x600 window, display 60 Hz | 31.3 | 33.4 ms | 33.4 ms | 50.1 ms | 19 | 0 |
+| 2026-10-10 | Prologue, player still, 65 s | Defaults: 800x600 window, VSync Half | 31.3 | 33.4 ms | 33.4 ms | 50.1 ms | 19 | 0 |
+| 2026-10-10 | Prologue, player still, 64 s | 1280x720 borderless, VSync Off, display 120 Hz | 59.5 | 16.8 ms | 42.1 ms | 134.8 ms | 20 | 3 |
