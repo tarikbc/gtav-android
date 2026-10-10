@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.0 (2026-10-10)
 
 - `EpicGamesLauncher.exe` keeps `GTA5.exe` on the fast cores (`GTA_PIN_MASK`, default `f8`, `0` turns it off):
   Android's scheduler parked the game's heaviest threads on the slow cores in 3 of 12 benchmark runs, at half the
