@@ -26,6 +26,8 @@ folder once more after the process is gone, or it misses the file (one run was l
 |---|---|---|---|---|
 | Baseline (settings above) | 23.9 ms | 42.1 | 38.6 | 120 |
 | GPU held at its top clock (power profile below) | 19.2 ms | 48.6 | 47.0 | 96 |
+| GPU top clock and the stub's core pin (three runs; the 57.3 one with the profiler attached) | 19.2 / 17.6 / 20.1 ms | 48.6 / 57.3 / 50.9 | 47.0 / 51.0 / 41.0 | 96 / 62 / 331 |
+| GPU top clock, core pin and the Rockstar tree parked on the little cores | 19.6 ms | 56.4 | 46.2 | 126 |
 | GPU top clock + GTA5.exe pinned to the fast cores by the launcher stub (measured with the sampling profiler running; a clean rerun is pending) | **17.6 ms** | **57.3** | **51.0** | 62 |
 | ARM64EC DXVK 2.4.1-1 (native) instead of GameNative's x86-64 build | 25.5 / 25.3 ms | 41.0 / 40.5 | 34.1 / 36.8 | 275 / 185 |
 | GTA5.exe pinned to the fast cores (cpu3 to cpu7) by hand, GPU governor default | 23.0 ms | 43.5 | 37.4 | 193 |

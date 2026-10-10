@@ -119,9 +119,10 @@ drives through the city for five passes. Only pass 4 (117 s, 4000+ frames) repea
 |---|---|---|---|
 | Container as above, GPU governor default, no pin | 42.1 | 23.9 ms | 38.6 |
 | GPU at its top clock (Power Control 8 / 8) | 48.6 | 19.2 ms | 47.0 |
-| GPU top clock and the launcher's core pin | **57.3** | **17.6 ms** | **51.0** |
+| GPU top clock and the launcher's core pin (three runs) | 48.6 to 57.3 | 17.6 to 20.1 ms | 41.0 to 51.0 |
+| GPU top clock, core pin and the Rockstar tree parked on the slow cores | **56.4** | **19.6 ms** | **46.2** |
 
-The last row was measured with a sampling profiler attached, which costs a few FPS; a clean rerun is pending.
+Runs of one configuration differ by up to 10 % (Android's memory and scheduler state), so one run is a hint, not a number.
 [PERFORMANCE.md](docs/how-it-works/PERFORMANCE.md) has every run, what did not help (a native ARM64EC DXVK, FEX
 with TSO off) and where the main thread's time goes.
 
