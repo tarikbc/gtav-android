@@ -1,0 +1,1 @@
+{"enablePowerControl":true,"adaptiveFpsCapEnabled":false,"enableAutoTuning":false,"enablePerClusterTuning":false,"tuningStrategy":"BALANCED","enableFanControl":false,"enableGamePinning":false,"name":"Custom","governor":"SCHEDUTIL","minCpuFreq":307200,"maxCpuFreq":3187200,"minGpuPowerLevel":8,"maxGpuPowerLevel":8,"minBusLevel":0,"maxBusLevel":0}

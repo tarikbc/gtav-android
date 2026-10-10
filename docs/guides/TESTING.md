@@ -13,10 +13,55 @@ python3 tools/scripts/frametimes.py 60 --csv run.csv
 It prints FPS, the mean, median, 99th-percentile and worst frame time, and the frames over 50 ms and over 100 ms.
 Set `ANDROID_SERIAL` when more than one device is connected.
 
+## The built-in benchmark
+
+GTA V runs its own benchmark when `commandline.txt` next to `GTA5.exe` (drive `A:` in the container) holds
+`-benchmark -benchmarkFrameTimes` (`tools/scripts/bats/cmdline_on.bat` writes it, `cmdline_off.bat` removes it;
+`runbat.py` runs a batch inside the session). The game then plays five scripted passes and exits by itself. The
+results land in `Documents\Rockstar Games\GTA V\Benchmarks\`: `Benchmark-<time>.txt` with the per-pass FPS and one
+`FrameTimes-Pass<n>-<time>.txt` per pass with every frame's time. `wbench.exe` copies them out without a console
+window, `benchsum.py` and `passcmp.py` summarize them, and `gexp.py` runs one experiment end to end
+([PERFORMANCE.md](../how-it-works/PERFORMANCE.md), "Tools").
+
+**Only pass 4 counts.** Passes 0 to 3 last about 10 s each and swing two to one between identical runs; pass 4 is
+the 117 s driving sequence with 4000 to 4500 frames and repeats within a few percent. Remove the switches after the
+series, or every start runs the benchmark.
+
+### Benchmark runs of 2026-10-10
+
+All with the container of the README (all settings Low, 1280x720 borderless, VSync Off, FEX `aoe4-perf6-30`,
+Turnip `turnip_v26.0.0_R6` with `maxDeviceMemory=2048`, `WINEDEBUG=-all` from run 4 on, Social Club's audio and
+video helpers ended). "Bad mode" = the game's heaviest threads sat on the slow cores (see PERFORMANCE.md);
+"perturbed" = the sampling profiler ran during the pass.
+
+| Run | Change | Passes 0 to 4 (FPS) | Overall FPS | Pass 4 median | Frames > 50 ms |
+|---|---|---|---|---|---|
+| 3 | baseline (bad mode) | 42.0 / 53.9 / 32.5 / 33.9 / 27.5 | 26.0 | 36 ms | 924 |
+| 4 | `WINEDEBUG=-all`, the CEF profile restored | 41.5 / 43.8 / 33.1 / 49.0 / 42.1 | 38.6 | 23.9 ms | 120 |
+| 5 | ARM64EC DXVK 2.4.1-1 gplasync (cold cache) | 41.2 / 31.0 / 28.1 / 26.8 / 41.0 | 34.1 | 25.5 ms | 275 |
+| 6 | ARM64EC DXVK, warm cache | 42.8 / 56.8 / 34.9 / 25.3 / 40.5 | 36.8 | 25.3 ms | 185 |
+| 7 | x86-64 DXVK back, `FEX_TSOENABLED=0` (bad mode) | 44.4 / 43.5 / 33.0 / 49.8 / 25.3 | 25.7 | 37 ms | 906 |
+| 8 | GTA5.exe pinned to cpu3 to cpu7 by hand | 44.8 / 38.5 / 32.8 / 34.3 / 43.5 | 37.4 | 23.0 ms | 193 |
+| 9 | `FEX_TSOENABLED=0` again | 43.6 / 62.5, then GTA5.exe crashed in pass 2 | | | |
+| 10 | GPU held at its top clock (power profile) | 50.9 / 70.5 / 59.8 / 62.7 / 48.6 | 47.0 | 19.2 ms | 96 |
+| 11 | same, no pin (bad mode, perturbed) | 45.0 / 64.4 / 31.7 / 27.1 / 24.2 | 24.6 | 41 ms | 1070 |
+| 12 | GPU top clock, pinned by the launcher stub (perturbed) | 44.3 / 48.3 / 50.5 / 66.7 / 57.3 | 51.0 | 17.6 ms | 62 |
+| 13 | GPU top clock, stub pin, clean (Cocoon restarted under memory pressure during the run) | 49.0 / 53.0 / 33.5 / 33.5 / 50.9 | 41.0 | 20.1 ms | 331 |
+| 14 | same, Rockstar tree parked on the little cores | 32.6 / 42.1 / 37.8 / 35.6 / 56.4 | 46.2 | 19.6 ms | 126 |
+| 15 | same, `callers` probe attached (perturbed) | 43.0 / 48.9 / 37.1 / 35.5 / 47.1 | 40.3 | 22.4 ms | 17 |
+| 16 | esync forced off (`WINEESYNC=0`, `PROTON_NO_ESYNC=1`), diagnostic | 6.7 / 8.4 / 7.7 / 6.6 / 5.7 | 5.7 | 164.5 ms | 2343 |
+| 17 | final clean: esync on, pin, parking, GPU clock, `FEX_TSOENABLED=0` | 56.7 / 42.4 / 39.8 / 39.1 / 57.1 | 48.9 | 18.6 ms | 102 |
+| 18 | same with TSO at its default | 40.9 / 39.7 / 39.1 / 45.5 / 52.5 | 40.4 | 19.2 ms | 401 |
+
+Runs 10 to 17 ran with `FEX_TSOENABLED=0` left in the container from run 9 (noticed after run 17); run 18 is the
+same configuration with TSO on.
+
 ## Rules used for the numbers in the README
 
 - One window per setting, a few runs at most; stop when the trend is clear.
 - The Thor's fan on **Custom** (88 %) only while measuring, back to **Smart** right after.
+- Judge a benchmark run by pass 4 only, and look at the run's probes (`gexp.py` records thread placement and the
+  busiest processes at 150 s) before trusting a slow run.
 - Do not start console programs in Wine while measuring (a `cmd` batch from adb, for example): the console window
   takes the focus and GTA V stops drawing.
 - Check that frames flow before recording. Opening Android's quick settings (for example to change the fan) pauses

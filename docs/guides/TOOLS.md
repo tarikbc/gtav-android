@@ -29,6 +29,15 @@ Writes which window has the focus to `wfocus.txt` next to itself, restores the t
 makes it the foreground window. GTA V stops drawing while it does not have the focus, and on Android nothing can
 alt-tab back to it.
 
+## wbench
+
+```
+wbench.exe [folder]            default %USERPROFILE%\Documents\Rockstar Games\GTA V\Benchmarks
+```
+
+Copies every file of the game's benchmark results folder into `bench\` next to itself and writes the listing to
+`wbench.txt` (the newest `Benchmark-*.txt` is named on the last line). `gbench.py` polls it every 30 s during a run.
+
 ## sdg (stack dump)
 
 ```
@@ -46,6 +55,13 @@ Android writes them to `/data/anr/` when it shows "isn't responding"; `adb bugre
 (`FS/data/anr/` in the zip). **Do not take the bug report while the dialog is on screen**: on the Thor its window dump
 hung Android's system server, and the watchdog restarted Android two minutes later, closing the game. Take it after
 the dialog is gone, and copy the zip only after `adb bugreport` prints its final line.
+
+## The host-side scripts
+
+`tools/scripts/` holds the Python scripts that drive the Thor over adb: one benchmark experiment end to end
+(`gexp.py`), the live dashboard (`gtadash.py`), thread placement, clocks, the sampling profiler and the FEX counters
+through the AoE agent. [PERFORMANCE.md](../how-it-works/PERFORMANCE.md) lists them; `tools/scripts/README.md` says
+how to run one experiment.
 
 ## Notes
 

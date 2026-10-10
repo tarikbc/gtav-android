@@ -2,3 +2,5 @@ build/
 *.csv
 .DS_Store
 __pycache__/
+tools/scripts/results/
+tools/scripts/__pycache__/
