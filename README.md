@@ -125,8 +125,12 @@ drives through the city for five passes. Only pass 4 (117 s, 4000+ frames) repea
 | Same, with `FEX_TSOENABLED=0` in the container variables | **57.1** | **18.6 ms** | **48.9** |
 | Same, TSO at its default | 52.5 | 19.2 ms | 40.4 |
 | Same, TSO default, Social Club rendering in software (v0.2.1 launcher) | **55.4** | **18.7 ms** | **48.7** |
+| Same at **1920x1080** (container Screen Size 1920x1080, game 1920x1080 fullscreen) | 50.1 | 19.5 ms | 46.6 |
 
 Runs of one configuration differ by up to 10 % (Android's memory and scheduler state), so one run is a hint, not a number.
+Full HD costs about 10 % of pass 4 (one run), because the CPU side sets the frame rate, not the GPU; set the container's
+Screen Size to 1920x1080 and pick 1920x1080 in the game. Free memory fell to 3.3 GB in that run (4 GB at 720p) and one
+of two Full HD sessions was killed by Android about 90 s into the game, so 1280x720 stays the safe default.
 `FEX_TSOENABLED=0` (FEX drops x86 memory ordering) gave the best run and four times fewer long frames, but the game ended
 once in pass 2 of about ten runs with it; add it as a container variable if you accept that. `WINEESYNC=1` (GameNative's
 default) must stay: without it the game runs at 5.7 FPS.
