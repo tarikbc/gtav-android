@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.1 (2026-10-10)
 
 - `EpicGamesLauncher.exe`: fourth `libcef.dll` patch, Social Club's CEF renders in software (`disable-gpu` renamed to
   the always-passed `disable-pinch`). No more GPU helper crash loop at launcher start, which left the sign-in page
