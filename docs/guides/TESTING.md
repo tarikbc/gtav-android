@@ -53,6 +53,7 @@ video helpers ended). "Bad mode" = the game's heaviest threads sat on the slow c
 | 17 | final clean: esync on, pin, parking, GPU clock, `FEX_TSOENABLED=0` | 56.7 / 42.4 / 39.8 / 39.1 / 57.1 | 48.9 | 18.6 ms | 102 |
 | 18 | same with TSO at its default | 40.9 / 39.7 / 39.1 / 45.5 / 52.5 | 40.4 | 19.2 ms | 401 |
 | 19 | same, Social Club's CEF rendering in software (libcef patch 4, launcher v0.2.1) | 57.6 / 62.6 / 43.8 / 36.8 / 55.4 | 48.7 | 18.7 ms | 65 |
+| 20 | same at 1920x1080 (container and game); the first attempt's session was killed by Android at 90 s | 52.4 / 63.9 / 57.1 / 32.0 / 50.1 | 46.6 | 19.5 ms | 69 |
 
 Runs 10 to 17 ran with `FEX_TSOENABLED=0` left in the container from run 9 (noticed after run 17); run 18 is the
 same configuration with TSO on.

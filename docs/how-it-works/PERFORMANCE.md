@@ -31,6 +31,7 @@ folder once more after the process is gone, or it misses the file (one run was l
 | Same, final clean run (esync on, TSO off) | 18.6 ms | 57.1 | 48.9 | 102 |
 | Same with TSO on (FEX default) | 19.2 ms | 52.5 | 40.4 | 401 |
 | Same, TSO on, Social Club's CEF rendering in software (libcef patch 4) | 18.7 ms | 55.4 | 48.7 | 65 |
+| Same at 1920x1080 (container and game), fullscreen | 19.5 ms | 50.1 | 46.6 | 69 |
 | esync forced off (`WINEESYNC=0`, `PROTON_NO_ESYNC=1`), diagnostic | 164.5 ms | 5.7 | 5.7 | 2343 |
 | GPU top clock + GTA5.exe pinned to the fast cores by the launcher stub (measured with the sampling profiler running; a clean rerun is pending) | **17.6 ms** | **57.3** | **51.0** | 62 |
 | ARM64EC DXVK 2.4.1-1 (native) instead of GameNative's x86-64 build | 25.5 / 25.3 ms | 41.0 / 40.5 | 34.1 / 36.8 | 275 / 185 |
@@ -58,6 +59,14 @@ container runs):
 minus the value. The CPU range above lets the CPU scale (it ramps to the top clock under load on its own).
 The file is `tools/scripts/power-profile-gpu-max.json`; `thor.py`'s `gcopy` or any file copy inside the session puts it in
 place. GameNative's container settings also have a Power Control tab for the same values (not tried here).
+
+### Full HD
+
+With the container's Screen Size at 1920x1080 and the game at 1920x1080 (`Display: 1920x1080 (FullScreen)` in the
+benchmark file), pass 4 ran at 50.1 FPS against 55.4 at 1280x720: 2.25 times the pixels for 10 % of the frame rate,
+one run each. The GPU, held at its top clock, is not the limiter at either resolution. The first Full HD session was
+killed by Android about 90 s into the game (no crash record; free memory had fallen to 3.3 GB, against 4 GB at 720p,
+with the GPU at 2.5 GB), the second ran the whole benchmark.
 
 ### DXVK: native is slower
 
