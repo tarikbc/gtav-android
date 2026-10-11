@@ -52,6 +52,7 @@ video helpers ended). "Bad mode" = the game's heaviest threads sat on the slow c
 | 16 | esync forced off (`WINEESYNC=0`, `PROTON_NO_ESYNC=1`), diagnostic | 6.7 / 8.4 / 7.7 / 6.6 / 5.7 | 5.7 | 164.5 ms | 2343 |
 | 17 | final clean: esync on, pin, parking, GPU clock, `FEX_TSOENABLED=0` | 56.7 / 42.4 / 39.8 / 39.1 / 57.1 | 48.9 | 18.6 ms | 102 |
 | 18 | same with TSO at its default | 40.9 / 39.7 / 39.1 / 45.5 / 52.5 | 40.4 | 19.2 ms | 401 |
+| 19 | same, Social Club's CEF rendering in software (libcef patch 4, launcher v0.2.1) | 57.6 / 62.6 / 43.8 / 36.8 / 55.4 | 48.7 | 18.7 ms | 65 |
 
 Runs 10 to 17 ran with `FEX_TSOENABLED=0` left in the container from run 9 (noticed after run 17); run 18 is the
 same configuration with TSO on.

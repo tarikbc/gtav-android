@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- `EpicGamesLauncher.exe`: fourth `libcef.dll` patch, Social Club's CEF renders in software (`disable-gpu` renamed to
+  the always-passed `disable-pinch`). No more GPU helper crash loop at launcher start, which left the sign-in page
+  blank in about half the starts; the X-server stalls came from that helper too. Benchmark pass 4 with TSO on:
+  55.4 FPS and 65 long frames (52.5 and 401 before): the overlay's GPU helper had competed with the game for the GPU.
+- `tools/scripts/gexp.py`: `--setup` forwarded, label parsing fixed.
+
 ## v0.2.0 (2026-10-10)
 
 - `EpicGamesLauncher.exe` keeps `GTA5.exe` on the fast cores (`GTA_PIN_MASK`, default `f8`, `0` turns it off):
