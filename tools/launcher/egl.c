@@ -56,6 +56,12 @@ static const struct site sites[] = {
     {0xb4a3bc, 1, "\x28", "\x20", L"V8 address space 40 -> 32 bits (the Thor's kernel has 39-bit user addresses)"},
     {0xd790f12, 11, "tmmon64.dll", "ntdll.dll\0\0", L"stack sampling profiler off (deadlocks the IO thread under FEX)"},
     {0xe471a08, 3, "\x6b\xa3\x8e", "\xc4\x02\x02", L"WebGPU feature name -> SpareRendererForSitePerProcess (disabled)"},
+    // The launcher passes --disable-pinch to every CEF browser it starts. With libcef's own name for the switch
+    // disable-gpu changed to disable-pinch, CEF sees --disable-gpu on that command line: no GPU helper crash loop at
+    // start (the blank sign-in page), no X-server stalls from it, and the overlay renders in software. The string
+    // has 7 padding bytes after it, so the longer name fits. socialclub.dll cannot be patched instead: the launcher
+    // checks its signature and then fails to load its UI at all.
+    {0xd1dd2dd, 14, "disable-gpu\0\0\0", "disable-pinch\0", L"switch name disable-gpu -> disable-pinch (CEF renders in software)"},
 };
 #define NSITES (sizeof(sites) / sizeof(sites[0]))
 

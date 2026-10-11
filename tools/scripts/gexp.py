@@ -16,15 +16,17 @@ import thor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 args = sys.argv[1:]
-label = args.pop(0)
+label = next(a for a in args if not a.startswith("--"))  # the first plain argument, wherever it is
+args.remove(label)
 attach = "--attach" in args
+setup = "--setup" in args  # forwarded to gbench: write the benchmark switches at the session start
 timeout = "25"
 note = ""
 cfg = []
 i = 0
 while i < len(args):
     a = args[i]
-    if a == "--attach":
+    if a in ("--attach", "--setup"):
         pass
     elif a == "--timeout":
         i += 1

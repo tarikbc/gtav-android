@@ -30,6 +30,7 @@ folder once more after the process is gone, or it misses the file (one run was l
 | GPU top clock, core pin and the Rockstar tree parked on the little cores | 19.6 ms | 56.4 | 46.2 | 126 |
 | Same, final clean run (esync on, TSO off) | 18.6 ms | 57.1 | 48.9 | 102 |
 | Same with TSO on (FEX default) | 19.2 ms | 52.5 | 40.4 | 401 |
+| Same, TSO on, Social Club's CEF rendering in software (libcef patch 4) | 18.7 ms | 55.4 | 48.7 | 65 |
 | esync forced off (`WINEESYNC=0`, `PROTON_NO_ESYNC=1`), diagnostic | 164.5 ms | 5.7 | 5.7 | 2343 |
 | GPU top clock + GTA5.exe pinned to the fast cores by the launcher stub (measured with the sampling profiler running; a clean rerun is pending) | **17.6 ms** | **57.3** | **51.0** | 62 |
 | ARM64EC DXVK 2.4.1-1 (native) instead of GameNative's x86-64 build | 25.5 / 25.3 ms | 41.0 / 40.5 | 34.1 / 36.8 | 275 / 185 |
@@ -75,7 +76,9 @@ core against 39 %), but it was never the limiter.
   after 17:52 (GPU clock, pin, parking, the profiles) ran with TSO off, and all of them completed. The split, one
   run each in the final configuration: TSO off 57.1 FPS in pass 4 with 102 frames over 50 ms, TSO on 52.5 FPS with
   401. So TSO off is worth about 9 % and far fewer long frames here, against that one crash in about ten runs. The
-  README keeps TSO on as the default and lists `FEX_TSOENABLED=0` as the optional step.
+  README keeps TSO on as the default and lists `FEX_TSOENABLED=0` as the optional step. With Social Club's CEF in
+  software mode (the fourth libcef patch) the TSO-on run reached 55.4 FPS with 65 long frames: the overlay's GPU
+  helper had been competing with the game for the GPU.
 - **Big-core pin.** The scheduler already keeps the main thread on cpu3 to cpu7 for about 90 % of the samples
   (`corewatch`). A pin gained 3 %, inside the noise.
 - **FEX exceptions.** The FEX counters of the `aoe4-perf6` build read zero fast traps and zero continues per second

@@ -72,8 +72,9 @@ What `EpicGamesLauncher.exe` does at each start ([EPIC-LAUNCH.md](docs/how-it-wo
 1. It starts the game as the Epic Games Launcher would, so the Rockstar launcher accepts the Epic launch.
 2. It adds `-nobattleye`, without which the game ends when story mode loads. A container variable
    `EPIC_EXTRA_ARGS` replaces that default.
-3. It patches Social Club's `libcef.dll` once (4 bytes and a string, a backup stays as `libcef.dll.orig`), so the
-   Rockstar sign-in page loads ([CEF-PATCHES.md](docs/how-it-works/CEF-PATCHES.md)). It patches only the known version
+3. It patches Social Club's `libcef.dll` once (4 bytes and two strings, a backup stays as `libcef.dll.orig`), so the
+   Rockstar sign-in page loads and Social Club renders in software, without its crashing GPU helper
+   ([CEF-PATCHES.md](docs/how-it-works/CEF-PATCHES.md)). It patches only the known version
    and leaves any other alone.
 4. It watches GameNative's X server and unfreezes it when Social Club stops reading
    ([X-SERVER-FREEZE.md](docs/how-it-works/X-SERVER-FREEZE.md)). `XWATCH=0` turns this off.
@@ -123,6 +124,7 @@ drives through the city for five passes. Only pass 4 (117 s, 4000+ frames) repea
 | GPU top clock, core pin and the Rockstar tree parked on the slow cores | **56.4** | **19.6 ms** | **46.2** |
 | Same, with `FEX_TSOENABLED=0` in the container variables | **57.1** | **18.6 ms** | **48.9** |
 | Same, TSO at its default | 52.5 | 19.2 ms | 40.4 |
+| Same, TSO default, Social Club rendering in software (v0.2.1 launcher) | **55.4** | **18.7 ms** | **48.7** |
 
 Runs of one configuration differ by up to 10 % (Android's memory and scheduler state), so one run is a hint, not a number.
 `FEX_TSOENABLED=0` (FEX drops x86 memory ordering) gave the best run and four times fewer long frames, but the game ended
