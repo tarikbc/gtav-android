@@ -66,7 +66,7 @@ if cfg:
 log(f"fan {thor.fan('custom')}")
 summary = pm = fex = ""
 try:
-    cmd = ["python3", "-u", os.path.join(HERE, "gbench.py"), "--trim"] + (["--attach"] if attach else []) + [label, timeout]
+    cmd = ["python3", "-u", os.path.join(HERE, "gbench.py"), "--trim"] + (["--attach"] if attach else []) + (["--setup"] if setup else []) + [label, timeout]
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
     def probes():  # the run's own signature: thread placement and load at 150 s, and the session's top processes
