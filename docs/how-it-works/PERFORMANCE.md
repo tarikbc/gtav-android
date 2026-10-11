@@ -171,7 +171,19 @@ of a core (handles, timers, the launcher tree); that is the floor without fsync.
 the stack) named the main thread's wait sites: `GTA5.exe+1eb41c0`, `+1f6a820`, `+1eb4101` and `+2f5db80` for
 `NtWaitForSingleObject`, `+134d31d`, `+134553e`, `+946517` and `+1525844` for `NtReleaseSemaphore`, `+258e2b8` for
 `Sleep`. The sampled RCX is not the handle (the registers change inside the dispatcher before the sample), so which
-objects they are stays open; without symbols these addresses are the end of this path.
+objects they are stays open. The `Sleep` address is a false positive: `GTA5.exe+258e2b8` lies in `.data` beyond the
+file's raw data and holds zeros at run time (read through the agent), so it was a data pointer on the stack, not a
+return address; the `callers` histogram counts every stack value inside the image. Without symbols these addresses
+are the end of this path.
+
+### The Social Club helpers' memory
+
+Nine `SocialClubHelper.exe` processes hold about 5 GB (the launcher UI's renderer 700 to 800 MB, the browser 700 MB,
+the overlay renderer 450 MB, the rest 350 MB each), and under GTA V's streaming the low memory killer drops cached
+Android apps (Cocoon, the shell, restarted twice in one run). Their CPU is parked on the little cores now; their
+memory stays: Social Club's settings are binary (`Profiles\<id>\profile.dat`), the DLL is signature-checked, and
+ending helpers beyond the audio and video ones ends the session ("duplicate sign in"). The two Chromium switches
+that would help (`renderer-process-limit`, `js-flags`) need values, which the rename trick cannot carry.
 
 A side effect of the agent's file protocol: its request and response files live on `/sdcard`, and Android's media
 scanner (`com.android.providers.media.module`) reacts to every write, up to 91 % of a core in a profiled run. Clean

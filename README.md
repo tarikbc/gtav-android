@@ -152,6 +152,9 @@ with TSO off) and where the main thread's time goes.
 
 ## How it was found
 
+What belongs to GameNative rather than to this repo (the X server's blocking writes, the pin that misses launcher-started
+games) is drafted in [docs/upstream/REPORTS.md](docs/upstream/REPORTS.md).
+
 [STORY.md](docs/STORY.md) tells the whole path, from a Steam copy that Rockstar would not activate to story mode on
 the Epic copy. [TOOLS.md](docs/guides/TOOLS.md) describes the small Windows tools used to look inside the Wine
 session while the X server is stuck.
