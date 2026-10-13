@@ -32,6 +32,7 @@ folder once more after the process is gone, or it misses the file (one run was l
 | Same with TSO on (FEX default) | 19.2 ms | 52.5 | 40.4 | 401 |
 | Same, TSO on, Social Club's CEF rendering in software (libcef patch 4) | 18.7 ms | 55.4 | 48.7 | 65 |
 | Same at 1920x1080 (container and game), fullscreen | 19.5 ms | 50.1 | 46.6 | 69 |
+| Back at 1280x720, after the Thor's new thermal paste (2026-10-13) | 19.3 ms | 52.4 | 45.7 | 119 |
 | esync forced off (`WINEESYNC=0`, `PROTON_NO_ESYNC=1`), diagnostic | 164.5 ms | 5.7 | 5.7 | 2343 |
 | GPU top clock + GTA5.exe pinned to the fast cores by the launcher stub (measured with the sampling profiler running; a clean rerun is pending) | **17.6 ms** | **57.3** | **51.0** | 62 |
 | ARM64EC DXVK 2.4.1-1 (native) instead of GameNative's x86-64 build | 25.5 / 25.3 ms | 41.0 / 40.5 | 34.1 / 36.8 | 275 / 185 |
@@ -67,6 +68,15 @@ benchmark file), pass 4 ran at 50.1 FPS against 55.4 at 1280x720: 2.25 times the
 one run each. The GPU, held at its top clock, is not the limiter at either resolution. The first Full HD session was
 killed by Android about 90 s into the game (no crash record; free memory had fallen to 3.3 GB, against 4 GB at 720p,
 with the GPU at 2.5 GB), the second ran the whole benchmark.
+
+### New thermal paste
+
+The Thor got new thermal paste on 2026-10-11. One run on 2026-10-13, at 1280x720 and otherwise as the libcef patch 4
+row (TSO on, AYN performance mode 2, display at 120 Hz), gave 52.4 FPS in pass 4 against 55.4, and 45.7 overall
+against 48.7. Counted as frames over time, pass 4 went from 50.0 to 48.3 FPS, with 23 frames over 50 ms against 37.
+That is inside the run-to-run spread. GameNative's CPU temperature during the run was 85.7 °C on average with a
+peak of 88 °C, against 88.1 and 90 before. The CPU clocks already ran at their maximum before the change, so the
+cooler chip has no clock to give back in this benchmark; it runs about 2 °C cooler at the same frame rate.
 
 ### DXVK: native is slower
 
