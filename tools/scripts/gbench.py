@@ -95,8 +95,13 @@ for attempt in range(1, 4):  # the Rockstar launcher sometimes ends on its own b
     subprocess.run(["python3", os.path.join(HERE, "epic_play.py")], capture_output=True)
     t0 = time.time()
     if setup:
-        while "winhandler.exe" not in exes():
+        for _ in range(180):
+            if "winhandler.exe" in exes():
+                break
             time.sleep(1)
+        else:
+            print(f"{label}: start {attempt}: no session after 180 s", flush=True)
+            continue
         time.sleep(5)  # winhandler's port opens a few seconds after the process appears
         out = subprocess.run(["python3", os.path.join(HERE, "runbat.py"), os.path.join(HERE, "bats", "cmdline_on.bat")],
                              capture_output=True, text=True).stdout
