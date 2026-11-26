@@ -52,7 +52,7 @@ Open GTA V in GameNative's Epic library, tap the **cog** next to Play, then **Ed
 | Tab | Setting | Value |
 |---|---|---|
 | General | Container Variant | `bionic` |
-| General | Wine Version | `proton-11.0-99-arm64ec-1` |
+| General | Wine Version | `proton-11.0-1-arm64ec-1` (see the note below) |
 | General | Executable Path | `D:\gtav-android\EpicGamesLauncher.exe` |
 | General | Disable Epic Overlay | **on** |
 | Graphics | Graphics Driver / Version | `Wrapper` / `turnip_v26.0.0_R6` |
@@ -66,6 +66,16 @@ otherwise keeps the clock low because the game looks only half busy to it. The s
 `tools/scripts/power-profile-gpu-max.json` (`.config/.power-profile` in the container's home; see
 [PERFORMANCE.md](docs/how-it-works/PERFORMANCE.md)). GameNative's own choice for this game (Box64 with an x86-64 Proton) fails: the Rockstar launcher
 stops with "Failed to connect to the Rockstar Games Library Service".
+
+**About the Wine version:** the Thor lists its Wine as `proton-11.0-99-arm64ec-1`, a name left by an earlier manual
+import; no download has that name. The companion project found its `ntdll.dll` byte-identical to the one in
+GameNative's official `proton-11.0-1-arm64ec`, so it is the same build
+([WINE-SOURCE.md](https://github.com/tarikbc/ageofempires-android/blob/main/docs/guides/WINE-SOURCE.md)).
+If the Wine Version list does not show `proton-11.0-1-arm64ec-1`, download
+[`proton-11.0-1-arm64ec.wcp`](https://github.com/GameNative/proton-wine/releases/download/build-p11-20260502-1-sdk35/proton-11.0-1-arm64ec.wcp)
+(277 MB, from GameNative's [proton-wine release](https://github.com/GameNative/proton-wine/releases/tag/build-p11-20260502-1-sdk35)),
+put it in the Download folder and import it: **Menu → Settings → Contents Manager → Import .wcp from device**. The
+official file was not run with GTA V here; if you try it, please tell us in an issue.
 
 What `EpicGamesLauncher.exe` does at each start ([EPIC-LAUNCH.md](docs/how-it-works/EPIC-LAUNCH.md)):
 
